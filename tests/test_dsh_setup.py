@@ -77,6 +77,24 @@ class SetupHistoryTests(unittest.TestCase):
             (modules/'@deepseek-ai/dsh-tools/package.json').write_text('{"version":"different"}')
             with self.assertRaises(ValueError):setup.modules_directory(cli)
 
+    def test_qualified_0_2_cli_family_is_accepted(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)/'node_modules/@deepseek-ai/dsh'
+            (root/'lib').mkdir(parents=True)
+            (root/'lib/bin.js').write_text('fixture')
+            meta = {'name':'@deepseek-ai/dsh','version':'0.2.0-rc.2','bin':{'dsh':'lib/bin.js'}}
+            (root/'package.json').write_text(json.dumps(meta))
+            with patch.dict(os.environ, {'AUGMENTOR_DSH_CLI':str(root/'lib/bin.js')}):
+                self.assertEqual(setup.cli_directory(), root.resolve())
+            modules=Path(temporary)/'node_modules'
+            for name,version in [('dsh-base','0.2.0-rc.2'),('dsh-tools','0.2.0-rc.2'),('schemastery','3.18.4')]:
+                path=modules/'@deepseek-ai'/name;path.mkdir(parents=True)
+                (path/'package.json').write_text(json.dumps({'version':version}))
+            self.assertEqual(setup.modules_directory(root)[0],modules)
+            # Packages mixed across qualified families do not form a supported install.
+            (modules/'@deepseek-ai/schemastery/package.json').write_text(json.dumps({'version':'3.18.2'}))
+            with self.assertRaises(ValueError):setup.modules_directory(root)
+
     def test_large_history_is_accepted_without_raising_other_endpoint_limits(self):
         # Real DSH histories contain full projections; the host's 273 sessions
         # returned 28 MB. Keep the same allowance as the native history adapter.

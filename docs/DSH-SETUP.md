@@ -7,11 +7,11 @@ have a separate [managed first-run path](MACOS-MANAGED-SETUP.md) in current
 source; it provisions the bundled runtime automatically. Public signed-install
 qualification remains open.
 
-Install and start the supported Node DSH CLI **0.1.5-rc.1** separately. Its `dsh`
+Install and start a supported Node DSH CLI (**0.1.5-rc.1** or **0.2.0-rc.2**) separately. Its `dsh`
 command must be on the application's PATH. Configure your model in DSH. Augmentor
 checks the CLI's first-party packages, the host API, its integration version, and
 a local pairing token; it does not copy the developer's providers or credentials.
-The checked CLI supplies dsh-base/dsh-tools 0.1.5-rc.1 and schemastery 3.18.2.
+The checked CLI supplies dsh-base/dsh-tools 0.1.5-rc.1 with schemastery 3.18.2, or dsh-base/dsh-tools 0.2.0-rc.2 with schemastery 3.18.4; mixed families are refused.
 The bridge uses Augmentor's bundled ws 8.21.3. DSH's own dependencies remain
 separately installed and owned by DSH.
 

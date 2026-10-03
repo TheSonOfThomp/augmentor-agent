@@ -8,7 +8,7 @@ export function dshSetupDialog(doc,send,container){
   if(doc.querySelector('.dsh-setup'))return
   const make=(tag,text)=>{const e=doc.createElement(tag);if(text)e.textContent=text;return e}
   const dialog=make('dialog');dialog.className='shared-prompt-editor memory-dialog dsh-setup'
-  const intro=make('p','Connect a running local DSH 0.1.5-rc.1 web profile. Augmentor adds its Linux and browser roles, shared prompts and memory. Manage model providers in DSH. Both Augmentor interfaces share this connection.')
+  const intro=make('p','Connect a running local DSH 0.1.5-rc.1 or 0.2.0-rc.2 web profile. Augmentor adds its Linux and browser roles, shared prompts and memory. Manage model providers in DSH. Both Augmentor interfaces share this connection.')
   const form=make('fieldset'),fields={}
   for(const [key,label] of [['endpoint','DSH URL'],['home','DSH data folder']]){
     const l=make('label',label),e=make('input');e.type='text';e.setAttribute('aria-label',label);l.append(e);form.append(l);fields[key]=e

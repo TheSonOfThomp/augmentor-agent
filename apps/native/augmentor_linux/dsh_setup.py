@@ -16,7 +16,7 @@ class DshSetupDialog(QDialog):
         self.completed.connect(lambda callback,value:callback(value) if not self.dismissed else None)
         self.setWindowTitle('Connect DSH');self.setModal(True);scaled(self).setMinimumWidth(460)
         layout=QVBoxLayout(self)
-        intro=QLabel('Connect a running local DSH 0.1.5-rc.1 web profile. Augmentor adds its Linux and browser roles, shared prompts and memory. Model providers remain managed in DSH. This connection is shared by both Augmentor interfaces.');intro.setWordWrap(True);layout.addWidget(intro)
+        intro=QLabel('Connect a running local DSH 0.1.5-rc.1 or 0.2.0-rc.2 web profile. Augmentor adds its Linux and browser roles, shared prompts and memory. Model providers remain managed in DSH. This connection is shared by both Augmentor interfaces.');intro.setWordWrap(True);layout.addWidget(intro)
         form=QFormLayout();layout.addLayout(form)
         self.endpoint=QLineEdit();self.home=QLineEdit()
         for label,field in [('DSH URL',self.endpoint),('DSH data folder',self.home)]:

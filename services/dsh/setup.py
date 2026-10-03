@@ -23,6 +23,12 @@ import uuid
 ROOT=Path(__file__).resolve().parents[2]
 VERSION=json.loads((ROOT/'release/product.json').read_text())['version']
 PRESETS={'linux':'augmentor-linux-product','browser':'augmentor-browser-product'}
+# Qualified DSH CLI families and the first-party packages each supplies.
+# 0.1.5-rc.1 is the installer-locked runtime; 0.2.0-rc.2 (Cordis 4.0.4,
+# Schemastery 3.18.4) is qualified by docs/DSH-0.2-COMPATIBILITY.md.
+SUPPORTED_DSH={'0.1.5-rc.1':{'@deepseek-ai/dsh-base':'0.1.5-rc.1','@deepseek-ai/dsh-tools':'0.1.5-rc.1','@deepseek-ai/schemastery':'3.18.2'},
+    '0.2.0-rc.2':{'@deepseek-ai/dsh-base':'0.2.0-rc.2','@deepseek-ai/dsh-tools':'0.2.0-rc.2','@deepseek-ai/schemastery':'3.18.4'}}
+SUPPORTED_DSH_LABEL=' or '.join(SUPPORTED_DSH)
 HEADER='# Copyright © 2026 Manolo Remiddi · SPDX-License-Identifier: LicenseRef-Augmentor-MIT-Resale-1.0\n'
 
 def personal_agent_entries():
@@ -106,19 +112,22 @@ def product_token(path, *, create=False):
         return value
 def describe():
     saved=current()
-    return {'endpoint':saved.get('endpoint','http://127.0.0.1:3080'),'home':saved.get('home',os.environ.get('DSH_HOME',str(Path.home()/'.dsh'))),'configured':bool(saved),'supportedDsh':'0.1.5-rc.1','version':VERSION}
+    return {'endpoint':saved.get('endpoint','http://127.0.0.1:3080'),'home':saved.get('home',os.environ.get('DSH_HOME',str(Path.home()/'.dsh'))),'configured':bool(saved),'supportedDsh':SUPPORTED_DSH_LABEL,'version':VERSION}
 
 
 def modules_directory(cli):
-    """Support both global CLI installs and npm's project-level hoisting."""
-    required={'@deepseek-ai/dsh-base':'0.1.5-rc.1','@deepseek-ai/dsh-tools':'0.1.5-rc.1','@deepseek-ai/schemastery':'3.18.2'}
+    """Support both global CLI installs and npm's project-level hoisting.
+
+    A CLI install qualifies when one complete supported family of first-party
+    packages is present; mixing packages across families is refused."""
     for parent in (cli,*cli.parents):
         modules=parent/'node_modules'
-        try:
-            if all(json.loads((modules/name/'package.json').read_text()).get('version')==version for name,version in required.items()):
-                return modules,required
-        except (OSError,ValueError):pass
-    raise ValueError('Install the supported DSH 0.1.5-rc.1 CLI before connecting it.')
+        for required in SUPPORTED_DSH.values():
+            try:
+                if all(json.loads((modules/name/'package.json').read_text()).get('version')==version for name,version in required.items()):
+                    return modules,required
+            except (OSError,ValueError):pass
+    raise ValueError(f'Install a supported DSH CLI ({SUPPORTED_DSH_LABEL}) before connecting it.')
 
 
 def cli_directory():
@@ -143,9 +152,9 @@ def cli_directory():
             meta = json.loads(manifest.read_text(encoding='utf-8'))
         except (OSError, ValueError):
             continue
-        if meta.get('name') == '@deepseek-ai/dsh' and meta.get('version') == '0.1.5-rc.1':
+        if meta.get('name') == '@deepseek-ai/dsh' and meta.get('version') in SUPPORTED_DSH:
             return candidate
-    raise ValueError('Use the supported Node DSH 0.1.5-rc.1 CLI installation.')
+    raise ValueError(f'Use a supported Node DSH CLI installation ({SUPPORTED_DSH_LABEL}).')
 
 def existing_prompt_plugin(remote,base):
     rows=remote.invoke('pluginInventory/list').get('entries',[])
@@ -181,7 +190,7 @@ class Setup:
         modules,packages=modules_directory(cli)
         remote=remote_client(base,home,query.get('token',[None])[0]);remote.authorize()
         host=remote.call('host.describe')
-        if host.get('version')!='0.1.5-rc.1':raise ValueError('This DSH API version has not been verified for this preview.')
+        if host.get('version') not in SUPPORTED_DSH:raise ValueError('This DSH API version has not been verified for this preview.')
         prompt_plugin=existing_prompt_plugin(remote,base)
         installed=False
         try:
